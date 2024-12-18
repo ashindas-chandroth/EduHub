@@ -9,6 +9,7 @@ import axios from 'axios'
 import { password, username } from '@/utils/apikey';
 import { useQuery } from '@tanstack/react-query';
 import CourseItem from '@/components/CourseItem';
+import { Course } from '@/types/types';
 
 interface Category {
   id: string;
@@ -20,17 +21,7 @@ interface SearchResponse {
   results: Course[]
 }
 
-interface Course {
-  id: number;
-  title: string;
-  subtitle: string;
-  image_480x270: string;
-  is_paid: boolean;
-  price: string;
-  num_reviews: number;
 
-
-}
 
 const categories: Category[] = [
   { id: "bussiness", name: "Bussiness", icon: "briefcase" },
@@ -52,6 +43,17 @@ const fetchCourses = async (searchTerm: string): Promise<SearchResponse> => {
   })
   return response.data
 }
+const fetchRecomendedCourses = async (): Promise<SearchResponse> => {
+  const response = await axios.get('https://www.udemy.com/api-2.0/courses/', {
+    params: {search:"bussiness"},
+    auth: {
+      username: username,
+      password: password
+    }
+  })
+  console.log("recomended",response.data)
+  return response.data
+}
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState("bussiness");
@@ -63,7 +65,14 @@ const HomeScreen = () => {
       enabled: true
     }
   )
-  console.log(data?.results)
+  const { data: recomendedCourses, error: recomendedCoursesError, isLoading: recomendedCoursesLoading } = useQuery(
+    {
+      queryKey: ['recomendedCourses'],
+      queryFn: () => fetchRecomendedCourses(),
+      enabled: true
+    }
+  )
+  //console.log(data?.results)
   //Render Category
   const renderCategory = ({ item }: { item: Category }) => {
     return (
@@ -131,29 +140,64 @@ const HomeScreen = () => {
 
 
         </Animated.View>
-        {
-          isLoading ? (
-            <View className='flex-1 justify-center items-center'>
-              <ActivityIndicator size="large" color="#FF1E00" />
-            </View>
-          ) : error ? (
-            <Text>Error:{(error as Error).message}</Text>
-          ) : data?.results ?
-            (
-              <FlatList horizontal data={data.results}
-                renderItem={({ item, index }) => (
-                  <CourseItem course={item} customStyle="w-[22rem] pl-6" index={index} />
-                )}
-                keyExtractor={(item)=>item.id.toString() }
-                showsHorizontalScrollIndicator={false} />
-            )
-            :
-            (
-              <View className='flex-1 justify-center item-center'>
-                <Text>No results, try searching for different course</Text>
+        <View>
+          {
+            isLoading ? (
+              <View className='flex-1 justify-center items-center'>
+                <ActivityIndicator size="large" color="#FF1E00" />
               </View>
-            )
-        }
+            ) : error ? (
+              <Text>Error:{(error as Error).message}</Text>
+            ) : data?.results ?
+              (
+                <FlatList horizontal={true} data={data.results}
+                  renderItem={({ item, index }) => (
+                    <CourseItem course={item} customStyle="w-[22rem] pl-6" index={index} />
+                  )}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsHorizontalScrollIndicator={false} />
+              )
+              :
+              (
+                <View className='flex-1 justify-center item-center'>
+                  <Text>No results, try searching for different course</Text>
+                </View>
+              )
+          }
+        </View>
+
+        {/*Recommended courses */}
+        <View className='pt-6'>
+          <View className='flex-row justify-between px-6 pt-4 items-center'>
+            <Text className='text-xl' style={{ fontFamily: "BarlowBold" }}>Recommended Courses</Text>
+            <Text className='text-[#FF1E00]' style={{ fontFamily: "BarlowSemiBold" }}>See more</Text>
+          </View>
+        </View>
+        <View>
+          {
+            recomendedCoursesLoading ? (
+              <View className='flex-1 justify-center items-center'>
+                <ActivityIndicator size="large" color="#FF1E00" />
+              </View>
+            ) : recomendedCoursesError ? (
+              <Text>Error:{(recomendedCoursesError as Error).message}</Text>
+            ) : recomendedCourses?.results ?
+              (
+                <FlatList horizontal={true} data={recomendedCourses?.results}
+                  renderItem={({ item, index }) => (
+                    <CourseItem course={item} customStyle="w-[22rem] pl-6" index={index} />
+                  )}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsHorizontalScrollIndicator={false} />
+              )
+              :
+              (
+                <View className='flex-1 justify-center item-center'>
+                  <Text>No results, try searching for different course</Text>
+                </View>
+              )
+          }
+        </View>
       </ScrollView>
     </View>
   );

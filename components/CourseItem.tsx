@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View, Image, Pressable } from 'react-native'
 import React from 'react'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { Course } from '@/app/(tabs)'
+import { Ionicons } from '@expo/vector-icons'
+import { useWishListStore } from '@/store/WishListStore'
+import { Course } from '@/types/types'
 
 interface CourseItemParams {
     course: any,
@@ -9,8 +11,18 @@ interface CourseItemParams {
     index: number
 }
 const CourseItem = ({ course, customStyle, index }: { course: Course, customStyle?: string, index: number }) => {
+    const { addToWishList, removeWishList, InWishList } = useWishListStore();
+    const isWishListed = InWishList(course.id);
+    const toggleWishList = (course:Course) => {
+        if (isWishListed) {
+            removeWishList(course.id);
+        }
+        else {
+            addToWishList(course);
+        }
+    }
     return (
-        <Pressable className={'pt-4' + (customStyle ? customStyle : "")}>
+        <Pressable style={{ width: 280 }} className={'pt-4' + (customStyle ? customStyle : "")}>
             <Animated.View className="gap-2 w-full border border-gray-300 overflow-hidden rounded-2xl"
                 entering={FadeInDown.duration(200).delay(index * 300).springify()}>
                 <Image source={{ uri: course.image_480x270 }}
@@ -23,6 +35,9 @@ const CourseItem = ({ course, customStyle, index }: { course: Course, customStyl
                                 course.is_paid ? `${course.price}` : "Free"
                             }
                         </Text>
+                        <Pressable onPress={() => toggleWishList(course)}>
+                            <Ionicons size={24} name={isWishListed ? "heart" : "heart-outline"} color={isWishListed ? 'red' : 'grey'} />
+                        </Pressable>
                     </View>
                 </View>
 
