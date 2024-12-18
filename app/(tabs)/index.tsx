@@ -1,74 +1,164 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
+import axios from 'axios'
+import { password, username } from '@/utils/apikey';
+import { useQuery } from '@tanstack/react-query';
+import CourseItem from '@/components/CourseItem';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+interface SearchResponse {
+  results: Course[]
+}
+
+interface Course {
+  id: number;
+  title: string;
+  subtitle: string;
+  image_480x270: string;
+  is_paid: boolean;
+  price: string;
+  num_reviews: number;
+
+
+}
+
+const categories: Category[] = [
+  { id: "bussiness", name: "Bussiness", icon: "briefcase" },
+  { id: "tech", name: "Tech", icon: "hardware-chip" },
+  { id: "design", name: "Design", icon: "color-palette" },
+  { id: "marketing", name: "Marketing", icon: "megaphone" },
+  { id: "health", name: "Health", icon: "fitness" },
+  { id: "lifestyle", name: "Lifestyle", icon: "heart" },
+
+];
+
+const fetchCourses = async (searchTerm: string): Promise<SearchResponse> => {
+  const response = await axios.get('https://www.udemy.com/api-2.0/courses/', {
+    params: { search: searchTerm },
+    auth: {
+      username: username,
+      password: password
+    }
+  })
+  return response.data
+}
+
+const HomeScreen = () => {
+  const [selectedCategory, setSelectedCategory] = useState("bussiness");
+  const [iconColor, setIconColor] = useState('#9ca3af')
+  const { data, error, isLoading, refetch } = useQuery(
+    {
+      queryKey: ['searchCourses', selectedCategory],
+      queryFn: () => fetchCourses(selectedCategory),
+      enabled: true
+    }
+  )
+  console.log(data?.results)
+  //Render Category
+  const renderCategory = ({ item }: { item: Category }) => {
+    return (
+      <Pressable
+        onPress={() => {
+          setSelectedCategory(item.id)
+
+        }}
+        className='mr-4 p-2 rounded-full items-center flex-col gap-2'
+      >
+        <View className={`p-4 rounded-full flex-row items-center ${selectedCategory === item.id ? "border-2 border-[#FF1E00]" : "border border-gray-400"}`}>
+          <Ionicons name={item.icon as any} size={24} color={selectedCategory === item.id ? '#FF1E00' : '#9ca3af'} />
+        </View>
+        <Text style={{ color: selectedCategory === item.id ? '#FF1E00' : '#9ca3af', fontFamily: selectedCategory === item.id ? 'BarlowBold' : 'BarlowMedium' }}>{item.name}</Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View className='flex-1 bg-white'>
+      <View className='bg-[#FF1E00] pt-16 pb-6 px-6'>
+        <Animated.View className='flex-row items-center justify-between'>
+          <View>
+            <View className='flex-row items-end gap-2'>
+              <Text className='text-white text-lg' style={{ fontFamily: "BarlowMedium" }}>Good Morning</Text>
+              <HelloWave />
+            </View>
+            <Text className='text-white text-2xl' style={{ fontFamily: "BarlowBold" }}>
+              Marrison Kalao
+            </Text>
+          </View>
+          <MaterialCommunityIcons name='bell-badge-outline' size={30} color="white" />
+        </Animated.View>
+
+        <Pressable onPress={() => router.push("/explore")}>
+          <View className='flex-row items-center bg-white/20 rounded-2xl p-4 mt-4'>
+            <MaterialCommunityIcons name='magnify' size={20} color="white" />
+            <Text className='text-white ml-2' style={{ fontFamily: "BarlowMedium" }}>
+              What you want to learn?
+            </Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <ScrollView className='flex-1 bg-white' contentContainerStyle={{ flexGrow: 1 }}>
+        <Animated.View className="gap-6" entering={FadeInDown.duration(500).delay(200).springify()}>
+          <View className='flex-row justify-between px-6 pt-4 items-center'>
+            <Text className='text-xl' style={{ fontFamily: "BarlowBold" }}>Explore Topics</Text>
+            <Text className='text-[#FF1E00]' style={{ fontFamily: "BarlowSemiBold" }}>See more</Text>
+          </View>
+          {/* Categories List*/}
+          <ScrollView
+            horizontal
+            className='mb-4 pl-4'
+            showsHorizontalScrollIndicator={false}
+          >
+            {
+              categories.map((category) => (
+                <View key={category.id}>
+                  {renderCategory({ item: category })}
+                </View>
+              ))
+            }
+          </ScrollView>
+
+
+        </Animated.View>
+        {
+          isLoading ? (
+            <View className='flex-1 justify-center items-center'>
+              <ActivityIndicator size="large" color="#FF1E00" />
+            </View>
+          ) : error ? (
+            <Text>Error:{(error as Error).message}</Text>
+          ) : data?.results ?
+            (
+              <FlatList horizontal data={data.results}
+                renderItem={({ item, index }) => (
+                  <CourseItem course={item} customStyle="w-[22rem] pl-6" index={index} />
+                )}
+                keyExtractor={(item)=>item.id.toString() }
+                showsHorizontalScrollIndicator={false} />
+            )
+            :
+            (
+              <View className='flex-1 justify-center item-center'>
+                <Text>No results, try searching for different course</Text>
+              </View>
+            )
+        }
+      </ScrollView>
+    </View>
+  );
+};
+
+export default HomeScreen;
+
+const styles = StyleSheet.create({});
