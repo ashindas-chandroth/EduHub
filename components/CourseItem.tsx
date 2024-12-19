@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, Image, Pressable } from 'react-native'
+import { StyleSheet, Text, View, Image, Pressable, Dimensions } from 'react-native'
 import React from 'react'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Ionicons } from '@expo/vector-icons'
 import { useWishListStore } from '@/store/WishListStore'
 import { Course } from '@/types/types'
+import { Route, router } from 'expo-router'
 
 interface CourseItemParams {
     course: any,
@@ -12,8 +13,9 @@ interface CourseItemParams {
 }
 const CourseItem = ({ course, customStyle, index }: { course: Course, customStyle?: string, index: number }) => {
     const { addToWishList, removeWishList, InWishList } = useWishListStore();
+    let deviceWidth = Dimensions.get('window').width
     const isWishListed = InWishList(course.id);
-    const toggleWishList = (course:Course) => {
+    const toggleWishList = (course: Course) => {
         if (isWishListed) {
             removeWishList(course.id);
         }
@@ -22,7 +24,18 @@ const CourseItem = ({ course, customStyle, index }: { course: Course, customStyl
         }
     }
     return (
-        <Pressable style={{ width: 280 }} className={'pt-4' + (customStyle ? customStyle : "")}>
+        <Pressable onPress={() =>
+
+            // router.push({
+            // pathname:'/explore',
+            // params:{courseId:course.id}
+            router.push({
+                pathname: '/coursedetail',
+                params: { courseId: course.id },
+            })
+
+
+        } style={{ width: deviceWidth}} className={'pt-4' + (customStyle ? customStyle : "")}>
             <Animated.View className="gap-2 w-full border border-gray-300 overflow-hidden rounded-2xl"
                 entering={FadeInDown.duration(200).delay(index * 300).springify()}>
                 <Image source={{ uri: course.image_480x270 }}

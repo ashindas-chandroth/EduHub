@@ -183,7 +183,7 @@ const HomeScreen = () => {
               <Text>Error:{(recomendedCoursesError as Error).message}</Text>
             ) : recomendedCourses?.results ?
               (
-                <FlatList horizontal={true} data={recomendedCourses?.results}
+                <FlatList className='mt-4' horizontal={true} data={recomendedCourses?.results}
                   renderItem={({ item, index }) => (
                     <CourseItem course={item} customStyle="w-[22rem] pl-6" index={index} />
                   )}

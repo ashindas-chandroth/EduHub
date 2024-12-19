@@ -10,8 +10,9 @@ import Animated, {
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Header } from 'react-native/Libraries/NewAppScreen';
 
-const HEADER_HEIGHT = 250;
+const HEADER_HEIGHT = 350;
 
 type Props = PropsWithChildren<{
   headerImage: ReactElement;
@@ -77,6 +78,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 32,
     gap: 16,
+    paddingTop:HEADER_HEIGHT/10,
     overflow: 'hidden',
+    marginTop:-HEADER_HEIGHT/2,
+    borderTopLeftRadius:24,
+    borderTopRightRadius:24
   },
 });
